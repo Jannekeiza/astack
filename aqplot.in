@@ -1,0 +1,6 @@
+asf1101559.aq              c: Name of .aq file for plotting
+/vps                       c: Output device (/ps,/vps,etc)
+5.0     10.0               c: Width, height of plot in inches (8.0x11.3=a4)
+1.0                        c: Character height
+1                          c: Line thickness
+0                          c: Include auto-label (0=no,1=yes)

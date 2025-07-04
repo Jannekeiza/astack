@@ -38,8 +38,6 @@ from mpl_toolkits.basemap import Basemap
 
 st=Stream()
 
-event = '200105_044051'  #'200107_060524' #'200102_042906' #'' 200124_175524 '200128_191052' 
-
 sampling_rate='H'
 channel='Z'
 
@@ -66,15 +64,11 @@ st=Stream()
 savedir='/sns/seismoml/test_waveforms/Figures/P_arrival_plots/'
 ev_writedir='/sns/seismoml/test_waveforms/Astack/Input_data/'
 
-#'''
 events = ['200102_182357','200105_044051','200106_012924','200107_043154','200107_060524',
           '200107_082431','200107_083405','200111_125448','200119_132802','200122_192220',
           '200122_192317','200123_055306','200124_072419','200124_175524','200126_063200',
           '200126_064053','200126_091210','200126_223341','200128_191052','200130_012807',
           '200130_112138']
-#'''
-          
-#events = ['200102_182357','200107_043154','200124_175524']
 
 #------------------------------------------------------------------------------------#
 # - Subroutines ---------------------------------------------------------------------#
@@ -160,16 +154,11 @@ for event in events:
                 trace.trim(starttime=starttime, endtime=endtime)
                 trace.detrend('linear')
                 trace.taper(max_percentage=0.05, type='cosine')
-                
-                #st=Stream()
-                #st += trace
-                #st.spectrogram(log=True, show=True, outfile=savedir+station+'_Spectogram_'+event+'_'+channel+'.png')
+
                 trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
                 sample_seconds = 1 / sample_rate
                 trace.resample(sample_seconds)
-                trace.data=trace.data*(10.**9)
-                #trace.filter("bandpass", freqmin=fmin, freqmax=fmax, corners=2, zerophase=True)
-
+                #trace.data=trace.data*(10.**9)
                 taupy_time = starttime + sec
 
                 st += trace

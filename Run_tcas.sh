@@ -42,8 +42,6 @@ for fmin in ${fmins[@]}; do
                 # Update the tcas.cmd file with the new event name
                 oldname=`grep aq $TCAS_CMD_FILE | awk '{print $1}'`
                 sed -i "s/$oldname/$EVENT_NAME/g" "$TCAS_CMD_FILE"
-                #olddir=`grep astack $TCAS_CMD_FILE`
-                #sed -i "s/$olddir/$EVENT_DIR/g" "$TCAS_CMD_FILE"
 
                 # Execute the tsac command
                 echo "Processing event: $EVENT_NAME"

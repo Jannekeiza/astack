@@ -177,8 +177,8 @@ if plots == 'arrivals' or plots == 'both':
         plt.legend()
         plt.savefig(savedir+'Astack_'+event+'_map.png')
         print(savedir+'Astack_'+event+'_map.png')
-# plot seismograms
 
+# plot seismograms
 if plots == 'waveforms' or plots == 'both':
     if ptype == 'initial':
         aq_pattern = os.path.join(directory, "??????_??????_"+fmin+"-"+fmax+"Hz.aq")
@@ -271,9 +271,6 @@ if plots == 'waveforms' or plots == 'both':
         plt.xlabel("Time (s)")
         plt.ylabel("Station Number")
         plt.title("P-wave arrivals for event "+event+", frequency band: "+fmin+'-'+fmax+'Hz')
-        #nr=int(ns*1e8)
-        #plt.yticks(range(1,ns))
-        #plt.yticks(range(1, ns + 1e8), [f"Station {i+1}" for i in range(ns)])  # Label Y-axis with station numbers
         plt.grid(True)
 
         # Show the plot

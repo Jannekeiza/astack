@@ -1,0 +1,25 @@
+WORKFLOW
+
+Directories:
+    - You will need a directory with the following directories: Input_data, Output_data and Figures.
+
+./Run_tcas.sh
+    * This is a wrapper around the three codes, which are explained individually below.
+
+1. ./HDF5_to_txt.py $fmin $fmax
+    * Rewrites HDF5 file with the waveform to a txt file (input format of astack code)
+    * You will need to edit the directories, names and types of the files so that it matches your input files and output directories
+    * Choose $fmin and $fmax as your minimum and maximum frequency you want to use
+
+2. ./tcas
+    * Fortran code, should not have to be recompiled, but if needed the makefile and fortran file are in the directoriy
+    * Uses input file tcas.cmd:
+        - Might have to edit the stack window start, based on which is your theoretical arrival time (so like 20s after start of the window)
+        - The rest should not have to be edited.
+
+3. ./Plot_astack.py $fmin $fmax $plottype
+    * Plots the results, again define the minimum and maximum frequency.
+    * You can choose 'arrivals' or 'waveforms' or 'both' as $plottype:
+        - 'arrivals': plots arrivals as a graph and on the map (in my case the region is Groningen, you'll have to adjust it if you want to plot it)
+        - 'waveforms': plots the waveforms after correction (uses the .asf file. If you want to plot it before the correction, use the .asi file)
+    * You will need to change the directory names

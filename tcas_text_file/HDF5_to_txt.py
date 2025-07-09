@@ -61,14 +61,20 @@ phase_type = "P"
 
 st=Stream()
 
-savedir='/sns/seismoml/test_waveforms/Figures/P_arrival_plots/'
-ev_writedir='/sns/seismoml/test_waveforms/Astack/Input_data/'
+savedir='/projects/prjs1435/test_waveforms/Figures/P_arrival_plots/'
+ev_writedir='/projects/prjs1435/test_waveforms/Astack/Test_012020/Input_data/'
+maindir='/projects/prjs1435/test_waveforms/seismograms_'+sampling_rate+'H_resp'
 
-events = ['200102_182357','200105_044051','200106_012924','200107_043154','200107_060524',
-          '200107_082431','200107_083405','200111_125448','200119_132802','200122_192220',
-          '200122_192317','200123_055306','200124_072419','200124_175524','200126_063200',
-          '200126_064053','200126_091210','200126_223341','200128_191052','200130_012807',
-          '200130_112138']
+#events = ['200102_182357','200105_044051','200106_012924','200107_043154','200107_060524',
+#          '200107_082431','200107_083405','200111_125448','200119_132802','200122_192220',
+#          '200122_192317','200123_055306','200124_072419','200124_175524','200126_063200',
+#          '200126_064053','200126_091210','200126_223341','200128_191052','200130_012807',
+#          '200130_112138']
+
+eventdir = maindir+'/2020/01/'
+# Get the list of events from the directory
+events = [d for d in os.listdir(eventdir) if os.path.isdir(os.path.join(eventdir, d))]
+print(events)
 
 #------------------------------------------------------------------------------------#
 # - Subroutines ---------------------------------------------------------------------#
@@ -110,7 +116,7 @@ for event in events:
 
     st=Stream()
     for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE310','NE311','NE312','NE317','NE318']:
-        file='/sns/seismoml/test_waveforms/seismograms_'+sampling_rate+'H_resp/2020/01/'+event+'/NR/'+station+'/'+station+'.'+event+'.hdf5'
+        file=maindir+'/2020/01/'+event+'/NR/'+station+'/'+station+'.'+event+'.hdf5'
         if os.path.exists(file):
             print(file)
         else:

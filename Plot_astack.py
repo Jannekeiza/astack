@@ -24,17 +24,19 @@ plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
 ptype='asf'
 
 if plots != 'arrivals' and ptype == 'initial':
-    directory = "/sns/seismoml/test_waveforms/Astack/Input_data"
+    directory = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data"
 else:
-    directory = "/sns/seismoml/test_waveforms/Astack/Output_data"
+    directory = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Output_data"
 
-savedir='/sns/seismoml/test_waveforms/Astack/Figures/'+fmin+'-'+fmax+'Hz/'
+savedir='/projects/prjs1435/test_waveforms/Astack/SNR_test/Figures/'
+
+print("Directory:", directory, "savedir:", savedir, "plots:", plots)
 # check if the director exists and otherwise create it
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 
 if plots == 'arrivals' or plots == 'both':
-
+    print("Plotting arrivals")    
     # Define the pattern to match files
     ttr_pattern = os.path.join(directory, "ts??????_??????_"+fmin+"-"+fmax+"Hz.ttr")
 
@@ -51,7 +53,7 @@ if plots == 'arrivals' or plots == 'both':
         values = []
         errors = []
 
-        station_file = '/sns/seismoml/test_waveforms/files/Input_files/deepNL_station_locations.txt'
+        station_file = '/projects/prjs1435/test_waveforms/files/Input_files/deepNL_station_locations.txt'
         
         with open(file, "r") as file:
             nr_stat=file.readline()
@@ -180,16 +182,17 @@ if plots == 'arrivals' or plots == 'both':
 
 # plot seismograms
 if plots == 'waveforms' or plots == 'both':
+    print("Plotting waveforms")
     if ptype == 'initial':
         aq_pattern = os.path.join(directory, "??????_??????_"+fmin+"-"+fmax+"Hz.aq")
     elif ptype == 'asi':
         aq_pattern = os.path.join(directory, "asi??????_??????_"+fmin+"-"+fmax+"Hz.aq")
     else:
         aq_pattern = os.path.join(directory, "asf??????_??????_"+fmin+"-"+fmax+"Hz.aq")
-
+    print(aq_pattern)
     # List all files matching the pattern
     aq_files = glob.glob(aq_pattern)
-
+    print("aq_files:", aq_files)
     # Print the list of files
     for aqfile in aq_files:
         print(aqfile)
@@ -239,18 +242,19 @@ if plots == 'waveforms' or plots == 'both':
                 sname = line[3]  # Station name (string)
                 
                 # Print the station header information
-                #print(f"Station Header: swpol={swpol}, npoints={npoints}, tshft={tshft}, sname={sname}")
+                print(f"Station Header: swpol={swpol}, npoints={npoints}, tshft={tshft}, sname={sname}")
 
                 #data=file.readline().strip()
                 #print(data)
                 #get values from one line of numbers in an array from the file
                 data = np.array([float(x) for x in file.readline().strip().split()])
-                if i == 13:
+                if sname == "zssl":
                     data=data*20000
-                elif i == 14:
-                    data=data*5000
+                elif sname == "zscp":
+                    data=data*10000
                 else:
                     data=data*10
+                
                 if maxd > 1.0e-6:
                     amp = swpol * data / (1.333 * maxd) + np.arange(1, npoints + 1)
                 else:
@@ -259,21 +263,36 @@ if plots == 'waveforms' or plots == 'both':
                 # Apply time shift
                 ptim = np.arange(npoints) * sampr + tshft
 
-                # Offset each waveform by its station number (i+1) for separation
-                if i < 13:
-                    plt.plot(ptim, amp + i*1e9, label=f"Station {i+1}")
-                elif i == 13:
-                    plt.plot(ptim, amp - (i+1)*2*1e8, label=f"Station {i+1}")
-                elif i == 14:
-                    plt.plot(ptim, amp - (i+10)*3*1e8, label=f"Station {i+1}")
+                # Set color for each station
+                #color_map = {
+                #    'NE301': 'red',     'NE302': 'orange',  'NE303': 'pink',
+                #   'NE304': 'brown',   'NE305': 'purple',  'NE306': 'magenta',
+                #    'NE307': 'olive',  'NE308': 'lime',    'NE309': 'green',
+                #    'NE310': 'teal',    'NE311': 'cyan',    'NE312': 'indigo',
+                #    'NE317': 'blue',    'NE318': 'navy'
+                #    }
+                color_map = {
+                    'NE301': 'blue',        'NE302': 'deepskyblue', 'NE303': 'lightskyblue',
+                    'NE304': 'pink',        'NE305': 'hotpink',     'NE306': 'deeppink',
+                    'NE307': 'crimson',     'NE308': 'red',         'NE309': 'orangered',
+                    'NE310': 'darkorange',  'NE311': 'orange',      'NE312': 'olive',
+                    'NE317': 'green',       'NE318': 'lime'
+                }
+                # Offset each waveform by its station number (i+1) for separation                
+                if sname == "zssl":
+                    plt.plot(ptim, amp - (i+1)*4*1e8, label=sname, color='grey')
+                elif sname == "zscp":
+                    plt.plot(ptim, amp - (i+10)*5*1e8, label=sname, color='black')
+                else:
+                    plt.plot(ptim, amp + 10e9 - i*1e9, label=sname, color=color_map[sname])
 
         # Customize the plot
         plt.xlabel("Time (s)")
-        plt.ylabel("Station Number")
+        #plt.ylabel("Station Number")
         plt.title("P-wave arrivals for event "+event+", frequency band: "+fmin+'-'+fmax+'Hz')
         plt.grid(True)
 
         # Show the plot
-        plt.legend()
+        plt.legend(loc='upper right', framealpha=1)
         plt.savefig(savedir+'Astack_'+event+'_seismograms_'+ptype+'.png')
         print(savedir+'Astack_'+event+'_seismograms_'+ptype+'.png')

@@ -6,4 +6,4 @@
 ?????????????_0.10-1.0Hz.aq         event file               
 -1.0                                min diff time
 1.0                                 max diff time
-/sns/seismoml/test_waveforms/Astack
+/projects/prjs1435/test_waveforms/Astack/SNR_test

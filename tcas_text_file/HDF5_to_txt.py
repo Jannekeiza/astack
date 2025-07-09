@@ -31,7 +31,7 @@ from obspy.signal.trigger import ar_pick
 from obspy.signal.trigger import coincidence_trigger
 from obspy.signal.cross_correlation import xcorr_pick_correction
 
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 
 #------------------------------------------------------------------------------------#
 # - Set values ----------------------------------------------------------------------#
@@ -43,19 +43,25 @@ channel='Z'
 
 min=4
 sec=60
-lsec=20
-usec=40
+lsec=30 #30
+usec=30 #30
 
-fmin=0.05
-fmax=0.3
+snr_threshold = 2.4
+
 #read in fmin and fmax
 fmin = float(sys.argv[1])
 fmax = float(sys.argv[2])
+overwrite = False
+if len(sys.argv) > 3:
+    if sys.argv[3] == 'True':
+        overwrite = True
+    elif sys.argv[3] == 'False':
+        overwrite = False
+    else:
+        print("Invalid argument for overwrite. Use True or False.")
+        sys.exit(1)
 
 sample_rate = 0.05 #In seconds
-
-lower_crop_time = 20
-upper_crop_time = 40
 
 phase_type = "P"
 
@@ -79,6 +85,25 @@ print(events)
 #------------------------------------------------------------------------------------#
 # - Subroutines ---------------------------------------------------------------------#
 
+def calculate_snr(tr,taupy_time):
+    noise_window = [taupy_time - 30, taupy_time - 5]
+    signal_window = [taupy_time - 2, taupy_time + 10]
+
+    noise_data = tr.slice(starttime=noise_window[0], endtime=noise_window[1]).data
+    signal_data = tr.slice(starttime=signal_window[0], endtime=signal_window[1]).data
+
+    # Compute RMS (Root Mean Square)
+    rms_noise = np.sqrt(np.mean(noise_data**2))
+    rms_signal = np.sqrt(np.mean(signal_data**2))
+
+    # Calculate SNR
+    snr = rms_signal / rms_noise
+    #print(f"SNR (RMS): {snr:.2f}")
+    
+    tr.stats.snr=f"{snr:.2f}"
+
+    return snr
+
 def write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir):
     event_time = datetime.datetime.fromisoformat(evortime[:-1])
 
@@ -91,6 +116,11 @@ def write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phas
         f.write(f"{event_time.hour} {event_time.minute} {event_time.second} 0\n") #Event time + trace start time (I've set to 0... doesn't seem to matter?)
         f.write(f"{ds} {phase_type}\n") #Sample rate and Phase being stacked
 
+    filename_snr = os.path.join(ev_writedir, f"SNR_{str(event)}_{str(fmin)}-{str(fmax)}Hz.txt") #
+    with open(filename_snr, 'w') as f:
+        for trace in st:
+            f.write(f"{trace.stats.station} SNR: {trace.stats.snr}\n")
+        
 def write_trace_data(st,ev_writedir,event):
     for trace in st:
         station=trace.stats.station
@@ -110,7 +140,11 @@ for event in events:
     aqpath = os.path.join(ev_writedir, f"{str(event)}_{str(fmin)}-{str(fmax)}Hz.aq")
     if os.path.exists(aqpath):
         print(f"Event {event} already processed")
-        continue
+        if overwrite == True:
+            print(f"Overwriting event {event}")
+        else:
+            print(f"Skipping event {event}")
+            continue
     else:
         print(f"Processing event {event}")
 
@@ -126,10 +160,10 @@ for event in events:
         with h5py.File(file, "r") as f:
           item=f["/Waveforms"]
           for item2 in item:
-            #print(item2)
-            #print(item[item2].keys())
+            print(item2)
+            print(item[item2].keys())
             for key in item[item2].keys():
-              #print(key)
+              print(key)
               dataset=item[item2][key]
               if dataset.attrs['channel'] == 'D'+channel:
                 waveform_data = dataset[:]
@@ -167,7 +201,13 @@ for event in events:
                 #trace.data=trace.data*(10.**9)
                 taupy_time = starttime + sec
 
-                st += trace
+                snr=calculate_snr(trace,taupy_time)
+
+                if snr > snr_threshold:
+                    print(f"* SNR = {snr:.2f}, SNR passed threshold - saved")
+                    st += trace
+                else:
+                    print(f"* SNR = {snr:.2f}, SNR didn't pass threshold - skipped")  
     f.close()
 
     #------------------------------------------------------------------------------------#
@@ -181,9 +221,21 @@ for event in events:
     df = trace.stats.sampling_rate
     ds=1/df
     
-    write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
+    if len(st) > 2:
+        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data"
+        write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
+        write_trace_data(st,ev_writedir,event)
 
-    write_trace_data(st,ev_writedir,event)
+    elif len(st) > 0 and len(st) < 2:
+        print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
+        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data/Unused_data"
+
+        write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
+        write_trace_data(st,ev_writedir,event)
+    
+    else:
+        print(event, "doesn't pass SNR for any station")
+    
     
     
 

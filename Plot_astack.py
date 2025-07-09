@@ -21,14 +21,15 @@ maxd = 1.0e-5  # Maximum amplitude
 fmin = sys.argv[1]
 fmax = sys.argv[2]
 plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
+testdir= sys.argv[4]  # directory with the test files
 ptype='asf'
 
 if plots != 'arrivals' and ptype == 'initial':
-    directory = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data"
+    directory = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Input_data"
 else:
-    directory = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Output_data"
+    directory = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Output_data"
 
-savedir='/projects/prjs1435/test_waveforms/Astack/SNR_test/Figures/'
+savedir='/projects/prjs1435/test_waveforms/Astack/'+testdir+'/Figures/'
 
 print("Directory:", directory, "savedir:", savedir, "plots:", plots)
 # check if the director exists and otherwise create it

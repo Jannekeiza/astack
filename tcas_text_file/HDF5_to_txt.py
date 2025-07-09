@@ -36,30 +36,31 @@ from obspy.signal.cross_correlation import xcorr_pick_correction
 #------------------------------------------------------------------------------------#
 # - Set values ----------------------------------------------------------------------#
 
+#Defined from input values
+fmin = float(sys.argv[1])
+fmax = float(sys.argv[2])
+testdir = sys.argv[3]
+
+overwrite = False
+if len(sys.argv) > 4:
+    if sys.argv[4] == 'True':
+        overwrite = True
+    elif sys.argv[4] == 'False':
+        overwrite = False
+    else:
+        print("Invalid argument for overwrite. Use True or False.")
+        sys.exit(1)
+
 st=Stream()
 
 sampling_rate='H'
 channel='Z'
 
-min=4
 sec=60
-lsec=30 #30
-usec=30 #30
+lsec=30
+usec=30
 
-snr_threshold = 2.4
-
-#read in fmin and fmax
-fmin = float(sys.argv[1])
-fmax = float(sys.argv[2])
-overwrite = False
-if len(sys.argv) > 3:
-    if sys.argv[3] == 'True':
-        overwrite = True
-    elif sys.argv[3] == 'False':
-        overwrite = False
-    else:
-        print("Invalid argument for overwrite. Use True or False.")
-        sys.exit(1)
+snr_threshold = 2.5
 
 sample_rate = 0.05 #In seconds
 
@@ -68,19 +69,16 @@ phase_type = "P"
 st=Stream()
 
 savedir='/projects/prjs1435/test_waveforms/Figures/P_arrival_plots/'
-ev_writedir='/projects/prjs1435/test_waveforms/Astack/Test_012020/Input_data/'
+ev_writedir='/projects/prjs1435/test_waveforms/Astack/'+testdir+'/Input_data/'
 maindir='/projects/prjs1435/test_waveforms/seismograms_'+sampling_rate+'H_resp'
-
-#events = ['200102_182357','200105_044051','200106_012924','200107_043154','200107_060524',
-#          '200107_082431','200107_083405','200111_125448','200119_132802','200122_192220',
-#          '200122_192317','200123_055306','200124_072419','200124_175524','200126_063200',
-#          '200126_064053','200126_091210','200126_223341','200128_191052','200130_012807',
-#          '200130_112138']
 
 eventdir = maindir+'/2020/01/'
 # Get the list of events from the directory
 events = [d for d in os.listdir(eventdir) if os.path.isdir(os.path.join(eventdir, d))]
+events=sorted(events)
 print(events)
+
+errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
 
 #------------------------------------------------------------------------------------#
 # - Subroutines ---------------------------------------------------------------------#
@@ -158,7 +156,15 @@ for event in events:
             continue
         
         with h5py.File(file, "r") as f:
+         itemname = "/Waveforms"
+         if itemname not in f:
+          print(f"{file} doesnt have an item /Waveforms")
+          errorfile.writelines(f"{file} doesnt have an item /Waveforms \n")
+           
+         else:
+
           item=f["/Waveforms"]
+
           for item2 in item:
             print(item2)
             print(item[item2].keys())
@@ -198,8 +204,8 @@ for event in events:
                 trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
                 sample_seconds = 1 / sample_rate
                 trace.resample(sample_seconds)
-                #trace.data=trace.data*(10.**9)
-                taupy_time = starttime + sec
+                trace.data=trace.data*(10.**9)
+                taupy_time = starttime + lsec
 
                 snr=calculate_snr(trace,taupy_time)
 
@@ -220,15 +226,17 @@ for event in events:
     evortime=trace.stats.ev_ortime
     df = trace.stats.sampling_rate
     ds=1/df
+
+    print(st)
     
     if len(st) > 2:
-        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data"
+        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Input_data"
         write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
         write_trace_data(st,ev_writedir,event)
 
     elif len(st) > 0 and len(st) < 2:
         print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
-        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/SNR_test/Input_data/Unused_data"
+        ev_writedir = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Input_data/Unused_data"
 
         write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
         write_trace_data(st,ev_writedir,event)
@@ -236,6 +244,8 @@ for event in events:
     else:
         print(event, "doesn't pass SNR for any station")
     
+    # flush print statements
+    sys.stdout.flush()
     
     
 

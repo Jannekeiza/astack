@@ -166,10 +166,10 @@ for event in events:
           item=f["/Waveforms"]
 
           for item2 in item:
-            print(item2)
-            print(item[item2].keys())
+            #print(item2)
+            #print(item[item2].keys())
             for key in item[item2].keys():
-              print(key)
+              #print(key)
               dataset=item[item2][key]
               if dataset.attrs['channel'] == 'D'+channel:
                 waveform_data = dataset[:]
@@ -231,6 +231,7 @@ for event in events:
     
     if len(st) > 2:
         ev_writedir = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Input_data"
+        print(event, "passes SNR for enough stations, nr stations = ",len(st))
         write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
         write_trace_data(st,ev_writedir,event)
 

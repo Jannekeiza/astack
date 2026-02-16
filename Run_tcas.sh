@@ -6,20 +6,25 @@
 fmin=0.02
 fmax=1.0
 plottype="both" #or both or map
-testdir="Test_012020"
+testdir="Test_2020"
 
 # ------------------------------------------------------------------------------- #
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-EVENT_DIR="/projects/prjs1435/test_waveforms/Astack/$testdir/Input_data"
+EVENT_DIR="/projects/prjs1435/Waveforms/Astack/Input_data"
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file
 TSAC_EXECUTABLE="tcas"           # Path to the tsac executable
 
 # Check if the event directory exists
 if [ ! -d "$EVENT_DIR" ]; then
-    echo "Error: Directory $EVENT_DIR does not exist."
-    exit 1
+    echo "Directory $EVENT_DIR does not exist."
+    try:
+        mkdir -p "$EVENT_DIR"
+        echo "Directory $EVENT_DIR created successfully."
+    except:
+        echo "Error: Failed to create directory $EVENT_DIR."
+        exit 1
 fi
 
 # Check if the tcas.cmd file exists

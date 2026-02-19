@@ -70,7 +70,7 @@ st=Stream()
 
 savedir='/projects/prjs1435/Waveforms/Figures/P_arrival_plots/'
 ev_writedir='/projects/prjs1435/Waveforms/Astack/Input_data/'
-maindir='/projects/prjs1435/Waveforms/seismograms'
+maindir='/projects/prjs1435/Waveforms/seismograms_LH'
 
 errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
 
@@ -153,6 +153,7 @@ for year in ['2019','2020','2021','2022','2023']:
             st=Stream()
             for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE310','NE311','NE312','NE317','NE318']:
                 file=maindir+'/'+year+'/'+mon+'/'+event+'/NR/'+station+'/'+station+'.'+event+'.hdf5'
+                print(f"Processing file: {file}")
                 if os.path.exists(file):
                     print(file)
                 else:
@@ -238,39 +239,39 @@ for year in ['2019','2020','2021','2022','2023']:
 
                                     # check if distance of event is within 90 degree radius from station
 
-                    f.close()
+                        f.close()
 
-                    #------------------------------------------------------------------------------------#
-                    # - Write traces to file ------------------------------------------------------------#
+                        #------------------------------------------------------------------------------------#
+                        # - Write traces to file ------------------------------------------------------------#
 
-                    station_count=len(st)
-                    evlon=trace.stats.event_longitude
-                    evlat=trace.stats.event_latitude
-                    evdep=trace.stats.event_depth
-                    evortime=trace.stats.ev_ortime
-                    df = trace.stats.sampling_rate
-                    ds=1/df
+                        station_count=len(st)
+                        evlon=trace.stats.event_longitude
+                        evlat=trace.stats.event_latitude
+                        evdep=trace.stats.event_depth
+                        evortime=trace.stats.ev_ortime
+                        df = trace.stats.sampling_rate
+                        ds=1/df
 
-                    print(st)
-                    
-                    if len(st) > 2:
-                        ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data"
-                        print(event, "passes SNR for enough stations, nr stations = ",len(st))
-                        write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
-                        write_trace_data(st,ev_writedir,event)
+                        print(st)
+                        
+                        if len(st) > 2:
+                            ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data"
+                            print(event, "passes SNR for enough stations, nr stations = ",len(st))
+                            write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
+                            write_trace_data(st,ev_writedir,event)
 
-                    elif len(st) > 0 and len(st) < 2:
-                        print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
-                        ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data/Unused_data"
+                        elif len(st) > 0 and len(st) < 2:
+                            print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
+                            ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data/Unused_data"
 
-                        write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
-                        write_trace_data(st,ev_writedir,event)
-                    
-                    else:
-                        print(event, "doesn't pass SNR for any station")
-                    
-                    # flush print statements
-                    sys.stdout.flush()
+                            write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
+                            write_trace_data(st,ev_writedir,event)
+                        
+                        else:
+                            print(event, "doesn't pass SNR for any station")
+                        
+                        # flush print statements
+                        sys.stdout.flush()
             
             
 

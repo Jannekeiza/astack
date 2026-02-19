@@ -25,11 +25,11 @@ testdir= sys.argv[4]  # directory with the test files
 ptype='asf'
 
 if plots != 'arrivals' and ptype == 'initial':
-    directory = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Input_data"
+    directory = "/projects/prjs1435/Waveforms/Astack/Input_data"
 else:
-    directory = "/projects/prjs1435/test_waveforms/Astack/"+testdir+"/Output_data"
+    directory = "/projects/prjs1435/Waveforms/Astack/Output_data"
 
-savedir='/projects/prjs1435/test_waveforms/Astack/'+testdir+'/Figures/'
+savedir='/projects/prjs1435/Waveforms/Astack/Figures/'
 
 print("Directory:", directory, "savedir:", savedir, "plots:", plots)
 # check if the director exists and otherwise create it
@@ -54,7 +54,7 @@ if plots == 'arrivals' or plots == 'both':
         values = []
         errors = []
 
-        station_file = '/projects/prjs1435/test_waveforms/files/Input_files/deepNL_station_locations.txt'
+        station_file = '/projects/prjs1435/Waveforms/files/Input_files/deepNL_station_locations.txt'
         
         with open(file, "r") as file:
             nr_stat=file.readline()

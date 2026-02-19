@@ -12,20 +12,27 @@ testdir="Test_2020"
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-EVENT_DIR="/projects/prjs1435/Waveforms/Astack/Input_data"
+BASE_DIR="/projects/prjs1435/Waveforms/Astack"
+EVENT_DIR="$BASE_DIR/Input_data"  # Directory containing the .aq event files
+
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file
 TSAC_EXECUTABLE="tcas"           # Path to the tsac executable
 
 # Check if the event directory exists
-if [ ! -d "$EVENT_DIR" ]; then
-    echo "Directory $EVENT_DIR does not exist."
-    try:
-        mkdir -p "$EVENT_DIR"
-        echo "Directory $EVENT_DIR created successfully."
-    except:
-        echo "Error: Failed to create directory $EVENT_DIR."
-        exit 1
-fi
+
+for dir in "Input_data" "Output_data" "Figures"; do
+    if [ ! -d "$BASE_DIR/$dir" ]; then
+        echo "Directory $BASE_DIR/$dir does not exist."
+        if mkdir -p "$BASE_DIR/$dir"; then
+            echo "Directory $BASE_DIR/$dir created successfully."
+        else
+            echo "Error: Failed to create directory $BASE_DIR/$dir."
+            exit 1
+        fi
+    fi
+done
+
+
 
 # Check if the tcas.cmd file exists
 if [ ! -f "$TCAS_CMD_FILE" ]; then

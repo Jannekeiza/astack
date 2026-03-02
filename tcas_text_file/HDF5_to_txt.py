@@ -39,7 +39,7 @@ from obspy.signal.cross_correlation import xcorr_pick_correction
 #Defined from input values
 fmin = float(sys.argv[1])
 fmax = float(sys.argv[2])
-testdir = sys.argv[3]
+sample_rate = sys.argv[3]
 
 overwrite = False
 if len(sys.argv) > 4:
@@ -53,7 +53,11 @@ if len(sys.argv) > 4:
 
 st=Stream()
 
-sampling_rate='L' #L = 1Hz, M = 20Hz, H = 100Hz
+if sample_rate == '20':
+    sample_type = 'H'
+elif sample_rate == '1':
+    sample_type = 'L'
+
 channel='Z'
 
 sec=60
@@ -62,15 +66,13 @@ usec=30
 
 snr_threshold = 2.5
 
-sample_rate = 1 #In seconds
-
 phase_type = "P"
 
 st=Stream()
 
 savedir='/projects/prjs1435/Waveforms/Figures/P_arrival_plots/'
 ev_writedir='/projects/prjs1435/Waveforms/Astack/Input_data/'
-maindir='/projects/prjs1435/Waveforms/seismograms_LH'
+maindir='/projects/prjs1435/Waveforms/seismograms_'+sample_type+'H'
 
 errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
 
@@ -151,95 +153,117 @@ for year in ['2019','2020','2021','2022','2023']:
                 print(f"Processing event {event}")
 
             st=Stream()
-            for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE310','NE311','NE312','NE317','NE318']:
-                file=maindir+'/'+year+'/'+mon+'/'+event+'/NR/'+station+'/'+station+'.'+event+'.hdf5'
+            for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE309','NE310','NE311','NE312','NE317','NE318']:
+                evdir=maindir+'/'+year+'/'+mon+'/'+event
+                stdir=evdir+'/NR/'+station
+                file=stdir+'/'+station+'.'+event+'.hdf5'
                 print(f"Processing file: {file}")
                 if os.path.exists(file):
                     print(file)
                 else:
                     print('File not found')
+                    #remove the directory if it's empty
+                    if os.path.exists(evdir+'/NR/'):
+                        if os.path.exists(evdir+'/NR/'+station):
+                            if len(os.listdir(stdir)) == 0:
+                                os.rmdir(stdir)
+                                print(f"Removed empty station directory: {stdir}")
+                        else:
+                            print(f"Directory {stdir} does not exist")
+                            if len(os.listdir(evdir+'/NR/')) == 0:
+                                os.rmdir(evdir+'/NR/')
+                                os.rmdir(evdir)
+                                print(f"Removed empty event directory: {evdir}")
+                    else:
+                        print(f"Directory {evdir} does not exist")
+
                     continue
                 
-                with h5py.File(file, "r") as f:
-                    itemname = "/Waveforms"
-                    if itemname not in f:
-                        print(f"{file} doesnt have an item /Waveforms")
-                        errorfile.writelines(f"{file} doesnt have an item /Waveforms \n")
-                
-                    else:
+                try:
+                    with h5py.File(file, "r") as f:
+                        itemname = "/Waveforms"
+                        if itemname not in f:
+                            print(f"{file} doesnt have an item /Waveforms")
+                            errorfile.writelines(f"{file} doesnt have an item /Waveforms \n")
+                    
+                        else:
 
-                        item=f["/Waveforms"]
+                            item=f["/Waveforms"]
 
-                        for item2 in item:
-                            print(item2)
-                            print(item[item2].keys())
-                            for key in item[item2].keys():
-                                print(key)
-                                dataset=item[item2][key]
-                                print(dataset)
-                                print(dataset.attrs.keys())
-                                if 'channel' in dataset.attrs and dataset.attrs['channel'] == 'D' + channel:
-                                    #if dataset.attrs['channel'] == 'D'+channel:
-                                    waveform_data = dataset[:]
-                                    start_time = UTCDateTime(dataset.attrs['starttime'])
-                                    trace = Trace(data=waveform_data)
-                                    print(trace)
+                            for item2 in item:
+                                print(item2)
+                                print(item[item2].keys())
+                                for key in item[item2].keys():
+                                    print(key)
+                                    dataset=item[item2][key]
+                                    print(dataset)
+                                    print(dataset.attrs.keys())
+                                    if 'channel' in dataset.attrs and dataset.attrs['channel'] == 'D' + channel:
+                                        #if dataset.attrs['channel'] == 'D'+channel:
+                                        waveform_data = dataset[:]
+                                        start_time = UTCDateTime(dataset.attrs['starttime'])
+                                        #end_time = UTCDateTime(dataset.attrs['endtime'])
+                                        trace = Trace(data=waveform_data)
+                                        print(trace)
 
-                                    trace.stats.network = dataset.attrs['network']
-                                    trace.stats.station = dataset.attrs['station']
-                                    trace.stats.location = dataset.attrs['location']
-                                    trace.stats.channel = dataset.attrs['channel']
-                                    trace.stats.starttime = start_time
-                                    trace.stats.distance = f.attrs['distance']
-                                    trace.stats.latitude = f.attrs['station latitude']
-                                    trace.stats.longitude = f.attrs['station longitude']
-                                    trace.stats.event_latitude = f.attrs['event latitude']
-                                    trace.stats.event_longitude = f.attrs['event longitude']
-                                    trace.stats.event_depth=f.attrs['event depth']
-                                    trace.stats.ev_ortime=f.attrs['event origin time']
+                                        trace.stats.network = dataset.attrs['network']
+                                        trace.stats.station = dataset.attrs['station']
+                                        trace.stats.location = dataset.attrs['location']
+                                        trace.stats.channel = dataset.attrs['channel']
+                                        trace.stats.distance = f.attrs['distance']
+                                        trace.stats.latitude = f.attrs['station latitude']
+                                        trace.stats.longitude = f.attrs['station longitude']
+                                        trace.stats.event_latitude = f.attrs['event latitude']
+                                        trace.stats.event_longitude = f.attrs['event longitude']
+                                        trace.stats.event_depth=f.attrs['event depth']
+                                        trace.stats.ev_ortime=f.attrs['event origin time']
+                                        #trace.stats.sampling_rate = f.attrs['sampling_rate']
 
-                                    trace.stats.starttime = start_time
-                                    print(start_time)
-                                    if sampling_rate == 'L':
-                                        trace.stats.sampling_rate = 1
-                                    elif sampling_rate == 'H':
-                                        trace.stats.sampling_rate = 100
-                                    elif sampling_rate == 'M':
-                                        trace.stats.sampling_rate = 20
+                                        trace.stats.starttime = start_time
+                                        #trace.stats.endtime = end_time
+                                        print(start_time)
 
-                                    print(trace)
-                                    if trace.stats.distance > 11000:
-                                        print(f"Event is too far from station {trace.stats.station}, distance = {trace.stats.distance} km")
-                                        errorfile.writelines(f"Event {event} is too far from station {trace.stats.station}, distance = {trace.stats.distance} km \n")
-                                        continue
+                                        num_samples = dataset.shape[0]  # Access the first (and only) dimension
+                                        print(f"Number of samples: {num_samples}")
+                                        sample_rate=(num_samples-1)/(2*60*60)
 
-                                    starttime=start_time+(20)*60-lsec
-                                    endtime=start_time+(20)*60+usec
+                                        trace.stats.sampling_rate = sample_rate
 
-                                    trace.trim(starttime=starttime, endtime=endtime)
-                                    #trace.detrend('linear')
-                                    #trace.taper(max_percentage=0.05, type='cosine')
+                                        print(sample_rate)
 
-                                    print(starttime, endtime)
-                                    print(trace)
-                                    print(f"Applying bandpass filter: {fmin} - {fmax} Hz")
-                                    trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
-                                    sample_seconds = 1 / sample_rate
-                                    trace.resample(sample_seconds)
-                                    trace.data=trace.data*(10.**9)
-                                    taupy_time = starttime + lsec
+                                        print(trace)
+                                        if trace.stats.distance > 11000:
+                                            print(f"Event is too far from station {trace.stats.station}, distance = {trace.stats.distance} km")
+                                            errorfile.writelines(f"Event {event} is too far from station {trace.stats.station}, distance = {trace.stats.distance} km \n")
+                                            continue
 
-                                    snr=calculate_snr(trace,taupy_time)
+                                        starttime=start_time+(20)*60-lsec
+                                        endtime=start_time+(20)*60+usec
 
-                                    if snr > snr_threshold:
-                                        print(f"* SNR = {snr:.2f}, SNR passed threshold - saved")
-                                        st += trace
-                                    else:
-                                        print(f"* SNR = {snr:.2f}, SNR didn't pass threshold - skipped")
+                                        trace.trim(starttime=starttime, endtime=endtime)
+                                        #trace.detrend('linear')
+                                        #trace.taper(max_percentage=0.05, type='cosine')
 
-                                    # check if distance of event is within 90 degree radius from station
+                                        print(starttime, endtime)
+                                        print(trace)
+                                        print(f"Applying bandpass filter: {fmin} - {fmax} Hz")
+                                        trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
+                                        sample_seconds = 1 / sample_rate
+                                        #trace.resample(sample_seconds)
+                                        trace.data=trace.data*(10.**9)
+                                        taupy_time = starttime + lsec
 
-                        f.close()
+                                        snr=calculate_snr(trace,taupy_time)
+
+                                        if snr > snr_threshold:
+                                            print(f"* SNR = {snr:.2f}, SNR passed threshold - saved")
+                                            st += trace
+                                        else:
+                                            print(f"* SNR = {snr:.2f}, SNR didn't pass threshold - skipped")
+
+                                        # check if distance of event is within 90 degree radius from station
+
+                            f.close()
 
                         #------------------------------------------------------------------------------------#
                         # - Write traces to file ------------------------------------------------------------#
@@ -272,6 +296,8 @@ for year in ['2019','2020','2021','2022','2023']:
                         
                         # flush print statements
                         sys.stdout.flush()
-            
+                
+                except:
+                    print(f"Error processing file: {file}")
             
 

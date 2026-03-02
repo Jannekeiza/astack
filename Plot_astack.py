@@ -10,7 +10,6 @@ import sys
 
 # Define the parameters
 npoints = 100  # Number of points in the trace
-sampr = 0.05   # Sampling rate
 tshft = 0   # Time shift
 swpol = 1      # Polarity switch
 maxd = 1.0e-5  # Maximum amplitude
@@ -21,7 +20,8 @@ maxd = 1.0e-5  # Maximum amplitude
 fmin = sys.argv[1]
 fmax = sys.argv[2]
 plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
-testdir= sys.argv[4]  # directory with the test files
+sample_rate= sys.argv[4]  # directory with the test files
+sampr = 1/sample_rate   # Sampling rate
 ptype='asf'
 
 if plots != 'arrivals' and ptype == 'initial':

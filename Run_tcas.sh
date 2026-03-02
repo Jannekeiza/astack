@@ -6,7 +6,7 @@
 fmin=0.02
 fmax=1.0
 plottype="both" #or both or map
-testdir="Test_2020"
+sample_rate=20
 
 # ------------------------------------------------------------------------------- #
 # main -------------------------------------------------------------------------- #
@@ -47,7 +47,7 @@ if [ $fmax > $fmin ] ; then
 
     # **** HDF5 to txt conversion ****
     echo "Converting HDF5 files to txt files..."
-    ./HDF5_to_txt.py $fmin $fmax $testdir
+    ./HDF5_to_txt.py $fmin $fmax $sample_rate
     echo "Done"
 
     # Iterate over all .aq files in the directory
@@ -72,7 +72,7 @@ if [ $fmax > $fmin ] ; then
 
     # **** Plotting the results ****
     echo "Plotting the results..."
-    ./Plot_astack.py $fmin $fmax $plottype $testdir
+    ./Plot_astack.py $fmin $fmax $plottype $sample_rate
     echo "Done"
 
     echo "All events processed successfully."

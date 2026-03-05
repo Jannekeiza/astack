@@ -46,6 +46,7 @@ if [ $fmax > $fmin ] ; then
     echo "Frequency band: $fmin - $fmax Hz"
 
     # **** HDF5 to txt conversion ****
+    #'''
     echo "Converting HDF5 files to txt files..."
     ./HDF5_to_txt.py $fmin $fmax $sample_rate
     echo "Done"
@@ -69,6 +70,7 @@ if [ $fmax > $fmin ] ; then
             exit 1
         fi
     done
+    #'''
 
     # **** Plotting the results ****
     echo "Plotting the results..."

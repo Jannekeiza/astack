@@ -135,169 +135,173 @@ for year in ['2019','2020','2021','2022','2023']:
     for mon in ['01','02','03','04','05','06','07','08','09','10','11','12']:
         eventdir = maindir+'/'+year+'/'+mon+'/'
         # Get the list of events from the directory
-        events = [d for d in os.listdir(eventdir) if os.path.isdir(os.path.join(eventdir, d))]
-        events=sorted(events)
-        #print(events)
+        if os.path.exists(eventdir):
+            events = [d for d in os.listdir(eventdir) if os.path.isdir(os.path.join(eventdir, d))]
+            events=sorted(events)
+            #print(events)
 
-        for event in events:
-            # check if path exists
-            aqpath = os.path.join(ev_writedir, f"{str(event)}_{str(fmin)}-{str(fmax)}Hz.aq")
-            if os.path.exists(aqpath):
-                print(f"Event {event} already processed")
-                if overwrite == True:
-                    print(f"Overwriting event {event}")
-                else:
-                    print(f"Skipping event {event}")
-                    continue
-            else:
-                print(f"Processing event {event}")
-
-            st=Stream()
-            for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE309','NE310','NE311','NE312','NE317','NE318']:
-                evdir=maindir+'/'+year+'/'+mon+'/'+event
-                stdir=evdir+'/NR/'+station
-                file=stdir+'/'+station+'.'+event+'.hdf5'
-                print(f"Processing file: {file}")
-                if os.path.exists(file):
-                    print(file)
-                else:
-                    print('File not found')
-                    #remove the directory if it's empty
-                    if os.path.exists(evdir+'/NR/'):
-                        if os.path.exists(evdir+'/NR/'+station):
-                            if len(os.listdir(stdir)) == 0:
-                                os.rmdir(stdir)
-                                print(f"Removed empty station directory: {stdir}")
-                        else:
-                            print(f"Directory {stdir} does not exist")
-                            if len(os.listdir(evdir+'/NR/')) == 0:
-                                os.rmdir(evdir+'/NR/')
-                                os.rmdir(evdir)
-                                print(f"Removed empty event directory: {evdir}")
+            for event in events:
+                # check if path exists
+                aqpath = os.path.join(ev_writedir, f"{str(event)}_{str(fmin)}-{str(fmax)}Hz.aq")
+                if os.path.exists(aqpath):
+                    print(f"Event {event} already processed")
+                    if overwrite == True:
+                        print(f"Overwriting event {event}")
                     else:
-                        print(f"Directory {evdir} does not exist")
+                        print(f"Skipping event {event}")
+                        continue
+                else:
+                    print(f"Processing event {event}")
 
-                    continue
-                
-                try:
-                    with h5py.File(file, "r") as f:
-                        itemname = "/Waveforms"
-                        if itemname not in f:
-                            print(f"{file} doesnt have an item /Waveforms")
-                            errorfile.writelines(f"{file} doesnt have an item /Waveforms \n")
+                st=Stream()
+                for station in ['NE301','NE302','NE303','NE304','NE305','NE306','NE307','NE308','NE309','NE310','NE311','NE312','NE317','NE318']:
+                    evdir=maindir+'/'+year+'/'+mon+'/'+event
+                    stdir=evdir+'/NR/'+station
+                    file=stdir+'/'+station+'.'+event+'.hdf5'
+                    print(f"Processing file: {file}")
+                    if os.path.exists(file):
+                        print(file)
+                    else:
+                        print('File not found')
+                        #remove the directory if it's empty
+                        if os.path.exists(evdir+'/NR/'):
+                            if os.path.exists(evdir+'/NR/'+station):
+                                if len(os.listdir(stdir)) == 0:
+                                    os.rmdir(stdir)
+                                    print(f"Removed empty station directory: {stdir}")
+                            else:
+                                print(f"Directory {stdir} does not exist")
+                                if len(os.listdir(evdir+'/NR/')) == 0:
+                                    os.rmdir(evdir+'/NR/')
+                                    os.rmdir(evdir)
+                                    print(f"Removed empty event directory: {evdir}")
+                        else:
+                            print(f"Directory {evdir} does not exist")
+
+                        continue
                     
-                        else:
-
-                            item=f["/Waveforms"]
-
-                            for item2 in item:
-                                print(item2)
-                                print(item[item2].keys())
-                                for key in item[item2].keys():
-                                    print(key)
-                                    dataset=item[item2][key]
-                                    print(dataset)
-                                    print(dataset.attrs.keys())
-                                    if 'channel' in dataset.attrs and dataset.attrs['channel'] == 'D' + channel:
-                                        #if dataset.attrs['channel'] == 'D'+channel:
-                                        waveform_data = dataset[:]
-                                        start_time = UTCDateTime(dataset.attrs['starttime'])
-                                        #end_time = UTCDateTime(dataset.attrs['endtime'])
-                                        trace = Trace(data=waveform_data)
-                                        print(trace)
-
-                                        trace.stats.network = dataset.attrs['network']
-                                        trace.stats.station = dataset.attrs['station']
-                                        trace.stats.location = dataset.attrs['location']
-                                        trace.stats.channel = dataset.attrs['channel']
-                                        trace.stats.distance = f.attrs['distance']
-                                        trace.stats.latitude = f.attrs['station latitude']
-                                        trace.stats.longitude = f.attrs['station longitude']
-                                        trace.stats.event_latitude = f.attrs['event latitude']
-                                        trace.stats.event_longitude = f.attrs['event longitude']
-                                        trace.stats.event_depth=f.attrs['event depth']
-                                        trace.stats.ev_ortime=f.attrs['event origin time']
-                                        #trace.stats.sampling_rate = f.attrs['sampling_rate']
-
-                                        trace.stats.starttime = start_time
-                                        #trace.stats.endtime = end_time
-                                        print(start_time)
-
-                                        num_samples = dataset.shape[0]  # Access the first (and only) dimension
-                                        print(f"Number of samples: {num_samples}")
-                                        sample_rate=(num_samples-1)/(2*60*60)
-
-                                        trace.stats.sampling_rate = sample_rate
-
-                                        print(sample_rate)
-
-                                        print(trace)
-                                        if trace.stats.distance > 11000:
-                                            print(f"Event is too far from station {trace.stats.station}, distance = {trace.stats.distance} km")
-                                            errorfile.writelines(f"Event {event} is too far from station {trace.stats.station}, distance = {trace.stats.distance} km \n")
-                                            continue
-
-                                        starttime=start_time+(20)*60-lsec
-                                        endtime=start_time+(20)*60+usec
-
-                                        trace.trim(starttime=starttime, endtime=endtime)
-                                        #trace.detrend('linear')
-                                        #trace.taper(max_percentage=0.05, type='cosine')
-
-                                        print(starttime, endtime)
-                                        print(trace)
-                                        print(f"Applying bandpass filter: {fmin} - {fmax} Hz")
-                                        trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
-                                        sample_seconds = 1 / sample_rate
-                                        #trace.resample(sample_seconds)
-                                        trace.data=trace.data*(10.**9)
-                                        taupy_time = starttime + lsec
-
-                                        snr=calculate_snr(trace,taupy_time)
-
-                                        if snr > snr_threshold:
-                                            print(f"* SNR = {snr:.2f}, SNR passed threshold - saved")
-                                            st += trace
-                                        else:
-                                            print(f"* SNR = {snr:.2f}, SNR didn't pass threshold - skipped")
-
-                                        # check if distance of event is within 90 degree radius from station
-
-                            f.close()
-
-                        #------------------------------------------------------------------------------------#
-                        # - Write traces to file ------------------------------------------------------------#
-
-                        station_count=len(st)
-                        evlon=trace.stats.event_longitude
-                        evlat=trace.stats.event_latitude
-                        evdep=trace.stats.event_depth
-                        evortime=trace.stats.ev_ortime
-                        df = trace.stats.sampling_rate
-                        ds=1/df
-
-                        print(st)
+                    try:
+                        with h5py.File(file, "r") as f:
+                            itemname = "/Waveforms"
+                            if itemname not in f:
+                                print(f"{file} doesnt have an item /Waveforms")
+                                errorfile.writelines(f"{file} doesnt have an item /Waveforms \n")
                         
-                        if len(st) > 2:
-                            ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data"
-                            print(event, "passes SNR for enough stations, nr stations = ",len(st))
-                            write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
-                            write_trace_data(st,ev_writedir,event)
+                            else:
 
-                        elif len(st) > 0 and len(st) < 2:
-                            print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
-                            ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data/Unused_data"
+                                item=f["/Waveforms"]
 
-                            write_event_file(event, station_count, evlon, evlat, evdep,evortime,sample_rate, phase_type, ev_writedir)
-                            write_trace_data(st,ev_writedir,event)
-                        
-                        else:
-                            print(event, "doesn't pass SNR for any station")
-                        
-                        # flush print statements
-                        sys.stdout.flush()
+                                for item2 in item:
+                                    print(item2)
+                                    print(item[item2].keys())
+                                    for key in item[item2].keys():
+                                        print(key)
+                                        dataset=item[item2][key]
+                                        print(dataset)
+                                        print(dataset.attrs.keys())
+                                        if 'channel' in dataset.attrs and dataset.attrs['channel'] == 'D' + channel:
+                                            #if dataset.attrs['channel'] == 'D'+channel:
+                                            waveform_data = dataset[:]
+                                            start_time = UTCDateTime(dataset.attrs['starttime'])
+                                            #end_time = UTCDateTime(dataset.attrs['endtime'])
+                                            trace = Trace(data=waveform_data)
+                                            print(trace)
+
+                                            trace.stats.network = dataset.attrs['network']
+                                            trace.stats.station = dataset.attrs['station']
+                                            trace.stats.location = dataset.attrs['location']
+                                            trace.stats.channel = dataset.attrs['channel']
+                                            trace.stats.distance = f.attrs['distance']
+                                            trace.stats.latitude = f.attrs['station latitude']
+                                            trace.stats.longitude = f.attrs['station longitude']
+                                            trace.stats.event_latitude = f.attrs['event latitude']
+                                            trace.stats.event_longitude = f.attrs['event longitude']
+                                            trace.stats.event_depth=f.attrs['event depth']
+                                            trace.stats.ev_ortime=f.attrs['event origin time']
+                                            #trace.stats.sampling_rate = f.attrs['sampling_rate']
+
+                                            trace.stats.starttime = start_time
+                                            #trace.stats.endtime = end_time
+                                            print(start_time)
+
+                                            num_samples = dataset.shape[0]  # Access the first (and only) dimension
+                                            print(f"Number of samples: {num_samples}")
+                                            sampling_rate=(num_samples-1)/(2*60*60)
+
+                                            trace.stats.sampling_rate = sampling_rate
+
+                                            print(sampling_rate)
+
+                                            print(trace)
+                                            if trace.stats.distance > 11000:
+                                                print(f"Event is too far from station {trace.stats.station}, distance = {trace.stats.distance} km")
+                                                errorfile.writelines(f"Event {event} is too far from station {trace.stats.station}, distance = {trace.stats.distance} km \n")
+                                                continue
+
+                                            starttime=start_time+(20)*60-lsec
+                                            endtime=start_time+(20)*60+usec
+
+                                            trace.trim(starttime=starttime, endtime=endtime)
+                                            #trace.detrend('linear')
+                                            #trace.taper(max_percentage=0.05, type='cosine')
+
+                                            print(starttime, endtime)
+                                            print(trace)
+                                            print(f"Applying bandpass filter: {fmin} - {fmax} Hz")
+                                            trace.filter("bandpass", freqmin=fmin, freqmax=fmax, zerophase=True)
+                                            #sample_seconds = 1 / sample_rate
+                                            # resample to 20 Hz if not already at 20 Hz (to match ak135)
+                                            print(f"Resampling to {sample_rate} Hz")
+                                            trace.resample(int(sample_rate))
+                                            print("trace.stats.sampling_rate after resampling: ", trace.stats.sampling_rate)
+                                            trace.data=trace.data*(10.**9)
+                                            taupy_time = starttime + lsec
+
+                                            snr=calculate_snr(trace,taupy_time)
+
+                                            if snr > snr_threshold:
+                                                print(f"* SNR = {snr:.2f}, SNR passed threshold - saved")
+                                                st += trace
+                                            else:
+                                                print(f"* SNR = {snr:.2f}, SNR didn't pass threshold - skipped")
+
+                                            # check if distance of event is within 90 degree radius from station
+
+                                f.close()
+
+                            #------------------------------------------------------------------------------------#
+                            # - Write traces to file ------------------------------------------------------------#
+
+                            station_count=len(st)
+                            evlon=trace.stats.event_longitude
+                            evlat=trace.stats.event_latitude
+                            evdep=trace.stats.event_depth
+                            evortime=trace.stats.ev_ortime
+                            df = trace.stats.sampling_rate
+                            ds=1/df
+
+                            print(st)
+                            
+                            if len(st) > 2:
+                                ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data"
+                                print(event, "passes SNR for enough stations, nr stations = ",len(st))
+                                write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
+                                write_trace_data(st,ev_writedir,event)
+
+                            elif len(st) > 0 and len(st) < 2:
+                                print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
+                                ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data/Unused_data"
+
+                                write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
+                                write_trace_data(st,ev_writedir,event)
+                            
+                            else:
+                                print(event, "doesn't pass SNR for any station")
+                            
+                            # flush print statements
+                            sys.stdout.flush()
+                    
+                    except:
+                        print(f"Error processing file: {file}")
                 
-                except:
-                    print(f"Error processing file: {file}")
-            
 

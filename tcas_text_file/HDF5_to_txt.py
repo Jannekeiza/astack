@@ -40,12 +40,13 @@ from obspy.signal.cross_correlation import xcorr_pick_correction
 fmin = float(sys.argv[1])
 fmax = float(sys.argv[2])
 sample_rate = sys.argv[3]
+base_dir = sys.argv[4]
 
 overwrite = False
-if len(sys.argv) > 4:
-    if sys.argv[4] == 'True':
+if len(sys.argv) > 5:
+    if sys.argv[5] == 'True':
         overwrite = True
-    elif sys.argv[4] == 'False':
+    elif sys.argv[5] == 'False':
         overwrite = False
     else:
         print("Invalid argument for overwrite. Use True or False.")
@@ -64,14 +65,13 @@ sec=60
 lsec=30
 usec=30
 
-snr_threshold = 2.5
+snr_threshold = 2.0
 
 phase_type = "P"
 
 st=Stream()
 
-savedir='/projects/prjs1435/Waveforms/Figures/P_arrival_plots/'
-ev_writedir='/projects/prjs1435/Waveforms/Astack/Input_data/'
+ev_writedir=base_dir+'/Input_data/'
 maindir='/projects/prjs1435/Waveforms/seismograms_'+sample_type+'H'
 
 errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
@@ -81,7 +81,7 @@ errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
 
 def calculate_snr(tr,taupy_time):
     noise_window = [taupy_time - 30, taupy_time - 5]
-    signal_window = [taupy_time - 2, taupy_time + 10]
+    signal_window = [taupy_time - 2, taupy_time + 5]
 
     noise_data = tr.slice(starttime=noise_window[0], endtime=noise_window[1]).data
     signal_data = tr.slice(starttime=signal_window[0], endtime=signal_window[1]).data
@@ -283,14 +283,14 @@ for year in ['2019','2020','2021','2022','2023']:
                             print(st)
                             
                             if len(st) > 2:
-                                ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data"
+                                ev_writedir = base_dir+"Input_data"
                                 print(event, "passes SNR for enough stations, nr stations = ",len(st))
                                 write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
                                 write_trace_data(st,ev_writedir,event)
 
                             elif len(st) > 0 and len(st) < 2:
                                 print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
-                                ev_writedir = "/projects/prjs1435/Waveforms/Astack/Input_data/Unused_data"
+                                ev_writedir = base_dir+"Input_data/Unused_data"
 
                                 write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
                                 write_trace_data(st,ev_writedir,event)

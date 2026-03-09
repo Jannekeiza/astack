@@ -21,15 +21,16 @@ fmin = sys.argv[1]
 fmax = sys.argv[2]
 plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
 sample_rate= sys.argv[4]  # directory with the test files
-sampr = sample_rate #1/int(sample_rate)   # Sampling rate
+sampr = 1/int(sample_rate)   # Sampling rate
+base_dir = sys.argv[5]  # base directory
 ptype='asf'
 
 if plots != 'arrivals' and ptype == 'initial':
-    directory = "/projects/prjs1435/Waveforms/Astack/Input_data"
+    directory = base_dir+"/Input_data"
 else:
-    directory = "/projects/prjs1435/Waveforms/Astack/Output_data"
+    directory = base_dir+"/Output_data"
 
-savedir='/projects/prjs1435/Waveforms/Astack/Figures/'
+savedir=base_dir+'/Figures/'
 
 print("Directory:", directory, "savedir:", savedir, "plots:", plots)
 # check if the director exists and otherwise create it

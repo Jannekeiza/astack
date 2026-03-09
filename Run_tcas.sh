@@ -12,7 +12,7 @@ sample_rate=20
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-BASE_DIR="/projects/prjs1435/Waveforms/Astack"
+BASE_DIR="/projects/prjs1435/Waveforms/Astack/HH_data_SNR2"
 EVENT_DIR="$BASE_DIR/Input_data"  # Directory containing the .aq event files
 
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file
@@ -48,8 +48,8 @@ if [ $fmax > $fmin ] ; then
     # **** HDF5 to txt conversion ****
     #'''
     echo "Converting HDF5 files to txt files..."
-    ./HDF5_to_txt.py $fmin $fmax $sample_rate
-    echo "Done"
+    ./HDF5_to_txt.py $fmin $fmax $sample_rate $BASE_DIR
+    echo "Already Done"
 
     # Iterate over all .aq files in the directory
     for EVENT_FILE in "$EVENT_DIR"/?????????????_"$fmin"-"$fmax"Hz.aq; do
@@ -58,7 +58,9 @@ if [ $fmax > $fmin ] ; then
 
         # Update the tcas.cmd file with the new event name
         oldname=`grep aq $TCAS_CMD_FILE | awk '{print $1}'`
+        old_dir=`tail -n 1 $TCAS_CMD_FILE | awk '{print $1}'`
         sed -i "s/$oldname/$EVENT_NAME/g" "$TCAS_CMD_FILE"
+        sed -i "s|$old_dir|$BASE_DIR|g" "$TCAS_CMD_FILE"
 
         # **** Execute the tsac command ****
         echo "Processing event: $EVENT_NAME"
@@ -74,7 +76,7 @@ if [ $fmax > $fmin ] ; then
 
     # **** Plotting the results ****
     echo "Plotting the results..."
-    ./Plot_astack.py $fmin $fmax $plottype $sample_rate
+    ./Plot_astack.py $fmin $fmax $plottype $sample_rate $BASE_DIR
     echo "Done"
 
     echo "All events processed successfully."

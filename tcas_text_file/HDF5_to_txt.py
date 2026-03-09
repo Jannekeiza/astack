@@ -283,14 +283,14 @@ for year in ['2019','2020','2021','2022','2023']:
                             print(st)
                             
                             if len(st) > 2:
-                                ev_writedir = base_dir+"Input_data"
+                                ev_writedir = base_dir+"/Input_data"
                                 print(event, "passes SNR for enough stations, nr stations = ",len(st))
                                 write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
                                 write_trace_data(st,ev_writedir,event)
 
                             elif len(st) > 0 and len(st) < 2:
                                 print(event, "doesn't pass SNR for enough stations, nr stations = ",len(st))
-                                ev_writedir = base_dir+"Input_data/Unused_data"
+                                ev_writedir = base_dir+"/Input_data/Unused_data"
 
                                 write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)
                                 write_trace_data(st,ev_writedir,event)

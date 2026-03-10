@@ -65,7 +65,7 @@ sec=60
 lsec=30
 usec=30
 
-snr_threshold = 2.0
+snr_threshold = 2.5
 
 phase_type = "P"
 
@@ -81,7 +81,7 @@ errorfile=open(os.path.join(ev_writedir, 'error_log.txt'),'w')
 
 def calculate_snr(tr,taupy_time):
     noise_window = [taupy_time - 30, taupy_time - 5]
-    signal_window = [taupy_time - 2, taupy_time + 5]
+    signal_window = [taupy_time - 2, taupy_time + 7]
 
     noise_data = tr.slice(starttime=noise_window[0], endtime=noise_window[1]).data
     signal_data = tr.slice(starttime=signal_window[0], endtime=signal_window[1]).data
@@ -282,7 +282,7 @@ for year in ['2019','2020','2021','2022','2023']:
 
                             print(st)
                             
-                            if len(st) > 2:
+                            if len(st) > 1:
                                 ev_writedir = base_dir+"/Input_data"
                                 print(event, "passes SNR for enough stations, nr stations = ",len(st))
                                 write_event_file(event, station_count, evlon, evlat, evdep,evortime,ds, phase_type, ev_writedir)

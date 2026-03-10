@@ -12,7 +12,7 @@ sample_rate=20
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-BASE_DIR="/projects/prjs1435/Waveforms/Astack/HH_data_SNR2"
+BASE_DIR="/projects/prjs1435/Waveforms/Astack/HH_data_SW7"
 EVENT_DIR="$BASE_DIR/Input_data"  # Directory containing the .aq event files
 
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file

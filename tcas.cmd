@@ -3,7 +3,7 @@
 1.15                                coefficient for pick error
 25.0    150.0                       min, max error limits (ms)
 25.0    12.0                        stack window (start,length)
-?????????????_0.02-1.0Hz.aq         event file               
+230714_092903_0.02-1.0Hz.aq         event file               
 -1.0                                min diff time
 1.0                                 max diff time
-/projects/prjs1435/test_waveforms/Astack/Test_012020
+/projects/prjs1435/Waveforms/Astack/HH_data_SW9_min2

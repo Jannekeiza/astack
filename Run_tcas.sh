@@ -5,15 +5,15 @@
 
 fmin=0.02
 fmax=1.0
-plottype="waveforms" #or both or map
-sample_rate=20
+plottype="both" #or both or map
+sample_rate=1
 
 # ------------------------------------------------------------------------------- #
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-BASE_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/Astack/HH_data_min2"  # Base directory for input and output data
-MAIN_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/seismograms_20Hz"  # Directory containing the HDF5 files
+BASE_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/Astack/LH_data_min2"  # Base directory for input and output data
+MAIN_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/seismograms_LH"  # Directory containing the HDF5 files
 EVENT_DIR="$BASE_DIR/Input_data"  # Directory containing the .aq event files
 
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file
@@ -68,9 +68,6 @@ if [ $fmax > $fmin ] ; then
             exit 1
         fi
     done
-
-echo "Processing frequency band: $fmin - $fmax Hz"
-if [ $fmax > $fmin ] ; then
 
     # **** Plotting the results ****
     echo "Plotting the results..."

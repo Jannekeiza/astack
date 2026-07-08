@@ -5,14 +5,15 @@
 
 fmin=0.02
 fmax=1.0
-plottype="both" #or both or map
+plottype="waveforms" #or both or map
 sample_rate=20
 
 # ------------------------------------------------------------------------------- #
 # main -------------------------------------------------------------------------- #
 
 # Directory containing the .aq event files
-BASE_DIR="/projects/prjs1435/Waveforms/Astack/HH_data_SW9_min2"
+BASE_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/Astack/HH_data_min2"  # Base directory for input and output data
+MAIN_DIR="/datasets/itc/gaia/deepnl/Waveforms/Dictum/seismograms_20Hz"  # Directory containing the HDF5 files
 EVENT_DIR="$BASE_DIR/Input_data"  # Directory containing the .aq event files
 
 TCAS_CMD_FILE="tcas.cmd"         # Path to the tcas.cmd file
@@ -20,7 +21,7 @@ TSAC_EXECUTABLE="tcas"           # Path to the tsac executable
 
 # Check if the event directory exists
 
-for dir in "Input_data" "Output_data" "Figures"; do
+for dir in "Input_data" "Output_data" "Figures" ; do
     if [ ! -d "$BASE_DIR/$dir" ]; then
         echo "Directory $BASE_DIR/$dir does not exist."
         if mkdir -p "$BASE_DIR/$dir"; then
@@ -31,8 +32,6 @@ for dir in "Input_data" "Output_data" "Figures"; do
         fi
     fi
 done
-
-
 
 # Check if the tcas.cmd file exists
 if [ ! -f "$TCAS_CMD_FILE" ]; then
@@ -46,10 +45,9 @@ if [ $fmax > $fmin ] ; then
     echo "Frequency band: $fmin - $fmax Hz"
 
     # **** HDF5 to txt conversion ****
-    #'''
     echo "Converting HDF5 files to txt files..."
-    ./HDF5_to_txt.py $fmin $fmax $sample_rate $BASE_DIR
-    echo "Already Done"
+    ./HDF5_to_txt.py $fmin $fmax $sample_rate $MAIN_DIR $BASE_DIR
+    echo "Done"
 
     # Iterate over all .aq files in the directory
     for EVENT_FILE in "$EVENT_DIR"/?????????????_"$fmin"-"$fmax"Hz.aq; do
@@ -58,9 +56,7 @@ if [ $fmax > $fmin ] ; then
 
         # Update the tcas.cmd file with the new event name
         oldname=`grep aq $TCAS_CMD_FILE | awk '{print $1}'`
-        old_dir=`tail -n 1 $TCAS_CMD_FILE | awk '{print $1}'`
         sed -i "s/$oldname/$EVENT_NAME/g" "$TCAS_CMD_FILE"
-        sed -i "s|$old_dir|$BASE_DIR|g" "$TCAS_CMD_FILE"
 
         # **** Execute the tsac command ****
         echo "Processing event: $EVENT_NAME"
@@ -72,7 +68,9 @@ if [ $fmax > $fmin ] ; then
             exit 1
         fi
     done
-    #'''
+
+echo "Processing frequency band: $fmin - $fmax Hz"
+if [ $fmax > $fmin ] ; then
 
     # **** Plotting the results ****
     echo "Plotting the results..."

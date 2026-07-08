@@ -55,7 +55,7 @@ if plots == 'arrivals' or plots == 'both':
         values = []
         errors = []
 
-        station_file = '/projects/prjs1435/Waveforms/files/Input_files/deepNL_station_locations.txt'
+        station_file = '/datasets/itc/gaia/deepnl/Waveforms/files/Dictum_station_locations.txt'
         
         with open(file, "r") as file:
             nr_stat=file.readline()
@@ -103,21 +103,21 @@ if plots == 'arrivals' or plots == 'both':
                 for line in lines:
                     parts = line.split()
                     if len(parts) >= 3:  # Ensure the line has enough columns
-                        if name == parts[0]:
-                            lat = float(parts[1])
-                            lon = float(parts[2])
+                        if name == parts[1]:
+                            lat = float(parts[2])
+                            lon = float(parts[3])
                             station_latitudes.append(lat)
                             station_longitudes.append(lon)
                             #calculate distance between event and station
                             dist = np.sqrt((float(evla)-lat)**2 + (float(evlo)-lon)**2)
                             distev.append(dist)
                             break
-                else:
-                    print(f"Station {name} not found in the station file")
-                    continue
+                        else:
+                            print(f"Station {name} not found in the station file")
+                            continue
         
         fig = plt.figure(figsize=(7, 7))
-        m = Basemap(projection='merc', llcrnrlat=52.4, urcrnrlat=54, llcrnrlon=5.2, urcrnrlon=8, resolution='i')
+        m = Basemap(projection='merc', llcrnrlat=50, urcrnrlat=54, llcrnrlon=3, urcrnrlon=8, resolution='i')
         m.drawcoastlines()
         m.drawcountries()
         m.drawstates()
@@ -255,8 +255,9 @@ if plots == 'waveforms' or plots == 'both':
                 elif sname == "zscp":
                     data=data*10000
                 else:
+                    #data=data/10e7
                     data=data*10
-                
+                    
                 if maxd > 1.0e-6:
                     amp = swpol * data / (1.333 * maxd) + np.arange(1, npoints + 1)
                 else:
@@ -273,12 +274,29 @@ if plots == 'waveforms' or plots == 'both':
                 #    'NE310': 'teal',    'NE311': 'cyan',    'NE312': 'indigo',
                 #    'NE317': 'blue',    'NE318': 'navy'
                 #    }
+                #color_map = {
+                #    'NE301': 'blue',        'NE302': 'deepskyblue', 'NE303': 'lightskyblue',
+                #    'NE304': 'pink',        'NE305': 'hotpink',     'NE306': 'deeppink',
+                #    'NE307': 'crimson',     'NE308': 'red',         'NE309': 'orangered',
+                #    'NE310': 'darkorange',  'NE311': 'orange',      'NE312': 'olive',
+                #    'NE317': 'green',       'NE318': 'lime'
+                #}
+
+                #color_map = {
+                #    'ARCN': 'blue',        'G84B': 'deepskyblue', 'NE424': 'lightskyblue',
+                #    'DBN': 'pink',        'HGN': 'hotpink',     'NE427': 'deeppink',
+                #    'G81B': 'crimson',     'HRKB': 'red',         'OPLO': 'orangered',
+                #    'G82B': 'darkorange',  'MAME': 'orange',      'TERZ': 'olive',
+                #     'G83B': 'green',       'NE05': 'lime',        'VKB': 'cyan',         'WTSB': 'magenta'
+                #}
                 color_map = {
-                    'NE301': 'blue',        'NE302': 'deepskyblue', 'NE303': 'lightskyblue',
-                    'NE304': 'pink',        'NE305': 'hotpink',     'NE306': 'deeppink',
-                    'NE307': 'crimson',     'NE308': 'red',         'NE309': 'orangered',
-                    'NE310': 'darkorange',  'NE311': 'orange',      'NE312': 'olive',
-                    'NE317': 'green',       'NE318': 'lime'
+                    'NE400': 'blue',        'NE401': 'deepskyblue', 'NE403': 'lightskyblue',
+                    'NE405': 'pink',        'NE406': 'hotpink',     'NE407': 'deeppink',
+                    'NE408': 'crimson',     'NE409': 'red',         'NE410': 'orangered',
+                    'NE411': 'darkorange',  'NE412': 'orange',      'NE413': 'olive',
+                    'NE414': 'green',       'NE425': 'lime',        'NE416': 'cyan',         'NE417': 'magenta',
+                    'NE418': 'blue',       'NE419': 'deepskyblue',        'NE420': 'lightskyblue',         'NE421': 'pink',
+                    'NE422': 'hotpink',       'NE427': 'crimson',        'NE424': 'red',         'NE425': 'orange'
                 }
                 # Offset each waveform by its station number (i+1) for separation                
                 if sname == "zssl":

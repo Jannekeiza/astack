@@ -45,11 +45,14 @@ if [ $fmax > $fmin ] ; then
     echo "Frequency band: $fmin - $fmax Hz"
 
     # **** HDF5 to txt conversion ****
-    echo "Converting HDF5 files to txt files..."
-    ./HDF5_to_txt.py $fmin $fmax $sample_rate $MAIN_DIR $BASE_DIR
-    echo "Done"
+    #echo "Converting HDF5 files to txt files..."
+    #./HDF5_to_txt.py $fmin $fmax $sample_rate $BASE_DIR $MAIN_DIR
+    #echo "Done"
 
     # Iterate over all .aq files in the directory
+    echo "event dir = $EVENT_DIR"
+    echo "base dir = $BASE_DIR"
+
     for EVENT_FILE in "$EVENT_DIR"/?????????????_"$fmin"-"$fmax"Hz.aq; do
         # Extract the event name from the file name
         EVENT_NAME=$(basename "$EVENT_FILE")

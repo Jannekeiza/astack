@@ -16,6 +16,21 @@ fi
 SRC="$1"
 DEST="$2"
 
+DESTF="Figures_min3"
+# if doesnt exist mkdir DESTF
+if [[ ! -d "$DESTF" ]]; then
+  mkdir -p "$DESTF"
+fi
+DEST_2="Output_data_only2"
+if [[ ! -d "$DEST_2" ]]; then
+  mkdir -p "$DEST_2"
+fi
+
+DESTF2="Figures_only2"
+if [[ ! -d "$DESTF2" ]]; then
+  mkdir -p "$DESTF2"
+fi
+
 if [[ ! -d "$SRC" ]]; then
   echo "Error: Source directory '$SRC' does not exist."
   exit 1
@@ -29,7 +44,7 @@ if [[ ${#TTR_FILES[@]} -eq 0 ]]; then
   exit 0
 fi
 
-moved=0
+copied=0
 skipped=0
 errors=0
 
@@ -46,19 +61,34 @@ for TTR_FILE in "${TTR_FILES[@]}"; do
     continue
   fi
 
+  event="${BASENAME%_*}"  # Remove the last underscore and everything after it
+  event="${event#ts}"  # Remove 'ts' prefix if it exists
+
   # Check if value > 2
   if awk "BEGIN { exit !($FIRST_LINE > 2) }"; then
     mkdir -p "$DEST"
 
     cp "$TTR_FILE" "$DEST/"
-    echo "  [MOVED] '$(basename "$AQ_FILE")' (value: $FIRST_LINE)"
+    echo "  [COPIED] '$(basename "$TTR_FILE")' (value: $FIRST_LINE)"
 
-    ((moved++)) || true
+    # Copy the matching figures in directory Figures
+    FIGURES=("Figures_min2/Astack_"$event"_arrivals.png" "Figures_min2/Astack_"$event"_map.png" "Figures_min2/Astack_"$event"_seismograms_asf.png")
+    cp ${FIGURES[@]} "$DESTF/"
+    echo "  [COPIED] Figures for event '$event'."
+
+    ((copied++)) || true
+
   else
-    echo "  [SKIP]  '$(basename "$AQ_FILE")' (value: $FIRST_LINE ≤ 2)"
-    ((skipped++)) || true
+  #  echo "  [SKIP]  '$(basename "$TTR_FILE")' (value: $FIRST_LINE ≤ 2)"
+  #  ((skipped++)) || true
+    cp "$TTR_FILE" "$DEST_2/"
+    echo "  [COPIED] '$(basename "$TTR_FILE")' (value: $FIRST_LINE ≤ 2) to Output_data_only2"
+    
+    FIGURES=("Figures_min2/Astack_"$event"_arrivals.png" "Figures_min2/Astack_"$event"_map.png" "Figures_min2/Astack_"$event"_seismograms_asf.png")
+    cp ${FIGURES[@]} "$DESTF2/"
+    echo "  [COPIED] Figures for event '$event' to Figures_only2."
   fi
 done
 
 echo ""
-echo "Done. Copied: $moved file(s), Skipped: $skipped file(s), Errors: $errors file(s)."
+echo "Done. Copied: $copied file(s), Skipped: $skipped file(s), Errors: $errors file(s)."

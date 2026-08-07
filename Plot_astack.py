@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#------------------------------------------------------------------------------------#
+# - Import the useful packages ------------------------------------------------------#
+
+import itertools
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
@@ -8,34 +13,75 @@ import os
 import glob
 import sys
 
+#------------------------------------------------------------------------------------#
+# - Set values ----------------------------------------------------------------------#
+
+fmin = sys.argv[1]
+fmax = sys.argv[2]
+plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
+sample_rate= sys.argv[4]  # directory with the test files
+astack_dir = sys.argv[5]  # astack directory
+dataset = sys.argv[6]  # dataset name
+
 # Define the parameters
 npoints = 100  # Number of points in the trace
 tshft = 0   # Time shift
 swpol = 1      # Polarity switch
 maxd = 1.0e-5  # Maximum amplitude
 
-# get list of files in the directory
-# Define the directory containing the files
-
-fmin = sys.argv[1]
-fmax = sys.argv[2]
-plots= sys.argv[3] #'arrivals' or 'both' or 'waveforms'
-sample_rate= sys.argv[4]  # directory with the test files
 sampr = 1/int(sample_rate)   # Sampling rate
-base_dir = sys.argv[5]  # base directory
 ptype='asf'
 
-if plots != 'arrivals' and ptype == 'initial':
-    directory = base_dir+"/Input_data"
-else:
-    directory = base_dir+"/Output_data"
+#------------------------------------------------------------------------------------#
+# - Directory setup -----------------------------------------------------------------#
 
-savedir=base_dir+'/Figures/'
+savedir=astack_dir+'/Figures/'
+
+if plots != 'arrivals' and ptype == 'initial':
+    directory = astack_dir+"/Input_data"
+else:
+    directory = astack_dir+"/Output_data"
 
 print("Directory:", directory, "savedir:", savedir, "plots:", plots)
 # check if the director exists and otherwise create it
 if not os.path.exists(savedir):
     os.makedirs(savedir)
+
+station_file = os.path.join(astack_dir, dataset+'_station_locations.txt')
+
+#------------------------------------------------------------------------------------#
+# - Subroutines ---------------------------------------------------------------------#
+
+def _distinct_colors(n):
+    """n visually distinct colors: qualitative colormaps first, then a
+    continuous one as fallback if n exceeds what they offer."""
+    qualitative = [plt.cm.tab20, plt.cm.tab20b, plt.cm.tab20c]
+    colors = list(itertools.chain.from_iterable(cmap.colors for cmap in qualitative))
+    if n <= len(colors):
+        return colors[:n]
+    cmap = plt.cm.get_cmap('gist_ncar', n)
+    return [cmap(i) for i in range(n)]
+
+
+def build_color_map(dataset,station_file):
+    """Return {station_name: color} for the given dataset."""
+    # get the list of station names for the second column of the station file
+    STATIONS = {}
+    with open(station_file, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 2:  # Ensure the line has enough columns
+                station_name = parts[1]
+                if dataset not in STATIONS:
+                    STATIONS[dataset] = []
+                STATIONS[dataset].append(station_name)
+    names = sorted(STATIONS[dataset])
+    colors = _distinct_colors(len(names))
+    return dict(zip(names, colors))
+
+#------------------------------------------------------------------------------------#
+# - MAIN ----------------------------------------------------------------------------#
 
 if plots == 'arrivals' or plots == 'both':
     print("Plotting arrivals")    
@@ -54,8 +100,6 @@ if plots == 'arrivals' or plots == 'both':
         names = []
         values = []
         errors = []
-
-        station_file = '/datasets/itc/gaia/deepnl/Waveforms/files/Dictum_station_locations.txt'
         
         with open(file, "r") as file:
             nr_stat=file.readline()
@@ -97,6 +141,7 @@ if plots == 'arrivals' or plots == 'both':
         distev = []
 
         for name in names:
+            name_present = False
             # get station names, latitude and longitude from station file
             with open(station_file, "r") as file:
                 lines = file.readlines()
@@ -111,10 +156,13 @@ if plots == 'arrivals' or plots == 'both':
                             #calculate distance between event and station
                             dist = np.sqrt((float(evla)-lat)**2 + (float(evlo)-lon)**2)
                             distev.append(dist)
+                            name_present == True
                             break
                         else:
-                            print(f"Station {name} not found in the station file")
                             continue
+                    if name_present != True:
+                        print(f"Station {name} not found in the station file")
+                        continue
         
         fig = plt.figure(figsize=(7, 7))
         m = Basemap(projection='merc', llcrnrlat=50, urcrnrlat=54, llcrnrlon=3, urcrnrlon=8, resolution='i')
@@ -255,8 +303,12 @@ if plots == 'waveforms' or plots == 'both':
                 elif sname == "zscp":
                     data=data*10000
                 else:
-                    #data=data/10e7
-                    data=data*10
+                    if dataset == 'Groningen':
+                        data=data*10000
+                    elif dataset == 'Dictum':
+                        data=data*10
+                    elif dataset == 'FDSN':
+                        data=data/10e7
                     
                 if maxd > 1.0e-6:
                     amp = swpol * data / (1.333 * maxd) + np.arange(1, npoints + 1)
@@ -266,38 +318,9 @@ if plots == 'waveforms' or plots == 'both':
                 # Apply time shift
                 ptim = np.arange(npoints) * sampr + tshft
 
-                # Set color for each station
-                #color_map = {
-                #    'NE301': 'red',     'NE302': 'orange',  'NE303': 'pink',
-                #   'NE304': 'brown',   'NE305': 'purple',  'NE306': 'magenta',
-                #    'NE307': 'olive',  'NE308': 'lime',    'NE309': 'green',
-                #    'NE310': 'teal',    'NE311': 'cyan',    'NE312': 'indigo',
-                #    'NE317': 'blue',    'NE318': 'navy'
-                #    }
-                #color_map = {
-                #    'NE301': 'blue',        'NE302': 'deepskyblue', 'NE303': 'lightskyblue',
-                #    'NE304': 'pink',        'NE305': 'hotpink',     'NE306': 'deeppink',
-                #    'NE307': 'crimson',     'NE308': 'red',         'NE309': 'orangered',
-                #    'NE310': 'darkorange',  'NE311': 'orange',      'NE312': 'olive',
-                #    'NE317': 'green',       'NE318': 'lime'
-                #}
+                # Set color for each station in subroutine
+                color_map = build_color_map(dataset,station_file)
 
-                #color_map = {
-                #    'ARCN': 'blue',        'G84B': 'deepskyblue', 'NE424': 'lightskyblue',
-                #    'DBN': 'pink',        'HGN': 'hotpink',     'NE427': 'deeppink',
-                #    'G81B': 'crimson',     'HRKB': 'red',         'OPLO': 'orangered',
-                #    'G82B': 'darkorange',  'MAME': 'orange',      'TERZ': 'olive',
-                #     'G83B': 'green',       'NE05': 'lime',        'VKB': 'cyan',         'WTSB': 'magenta'
-                #}
-                color_map = {
-                    'NE400': 'blue',        'NE401': 'deepskyblue', 'NE403': 'lightskyblue',
-                    'NE405': 'pink',        'NE406': 'hotpink',     'NE407': 'deeppink',
-                    'NE408': 'crimson',     'NE409': 'red',         'NE410': 'orangered',
-                    'NE411': 'darkorange',  'NE412': 'orange',      'NE413': 'olive',
-                    'NE414': 'green',       'NE425': 'lime',        'NE416': 'cyan',         'NE417': 'magenta',
-                    'NE418': 'blue',       'NE419': 'deepskyblue',        'NE420': 'lightskyblue',         'NE421': 'pink',
-                    'NE422': 'hotpink',       'NE427': 'crimson',        'NE424': 'red',         'NE425': 'orange'
-                }
                 # Offset each waveform by its station number (i+1) for separation                
                 if sname == "zssl":
                     plt.plot(ptim, amp - (i+1)*4*1e8, label=sname, color='grey')
